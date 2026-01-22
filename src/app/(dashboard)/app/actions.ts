@@ -97,35 +97,6 @@ export async function logCall(formData: FormData) {
   redirect('/app')
 }
 
-export async function logDeposit(formData: FormData) {
-  'use server'
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-
-  const sessionId = formData.get('sessionId') as string
-  const amount = parseFloat(formData.get('amount') as string)
-  const reference = formData.get('reference') as string
-  const notes = formData.get('notes') as string
-
-  const { error } = await supabase.from('deposit_entries').insert({
-    user_id: user.id,
-    session_id: sessionId,
-    amount,
-    reference,
-    notes,
-    occurred_at: new Date().toISOString()
-  })
-
-  if (error) {
-    console.error('Error logging deposit:', error)
-    return
-  }
-
-  revalidatePath('/app')
-  redirect('/app')
-}
-
 export async function updateRemarks(formData: FormData) {
   'use server'
   const supabase = await createClient()

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { Phone, DollarSign, Coffee } from 'lucide-react'
+import { Phone, Coffee } from 'lucide-react'
 import { FormattedDate, FormattedTime } from '@/components/ui/date-formatter'
 
 export default async function CSRLogsPage() {
@@ -11,7 +11,6 @@ export default async function CSRLogsPage() {
     .select(`
       *,
       call_entries(*),
-      deposit_entries(*),
       break_entries(*)
     `)
     .eq('user_id', user?.id)
@@ -42,16 +41,11 @@ export default async function CSRLogsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col items-center p-2 bg-accent/50 rounded-xl">
                 <Phone size={14} className="text-blue-500 mb-1" />
                 <p className="text-sm font-bold">{session.call_entries?.length || 0}</p>
                 <p className="text-[9px] text-muted-foreground uppercase">Calls</p>
-              </div>
-              <div className="flex flex-col items-center p-2 bg-accent/50 rounded-xl">
-                <DollarSign size={14} className="text-emerald-500 mb-1" />
-                <p className="text-sm font-bold">{session.deposit_entries?.length || 0}</p>
-                <p className="text-[9px] text-muted-foreground uppercase">Deposits</p>
               </div>
               <div className="flex flex-col items-center p-2 bg-accent/50 rounded-xl">
                 <Coffee size={14} className="text-amber-500 mb-1" />

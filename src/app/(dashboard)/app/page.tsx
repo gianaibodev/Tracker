@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { clockIn, clockOut, endBreak, logCall, logDeposit, updateRemarks, updateBreakNotes } from './actions'
-import { Clock, Coffee, Phone, DollarSign, PenLine } from 'lucide-react'
+import { clockIn, clockOut, endBreak, logCall, updateRemarks, updateBreakNotes } from './actions'
+import { Clock, Coffee, Phone, PenLine } from 'lucide-react'
 import { FormattedTime } from '@/components/ui/date-formatter'
 import { BreakButton } from '@/components/break-button'
 import { SubmitButton } from '@/components/submit-button'
@@ -72,13 +72,6 @@ export default async function CSRDashboardPage() {
     .gte('occurred_at', todayStart)
     .lte('occurred_at', todayEnd)
 
-  // Get today's deposits
-  const { data: depositsData, count: depositsCount } = await supabase
-    .from('deposit_entries')
-    .select('amount')
-    .eq('user_id', user?.id)
-    .gte('occurred_at', todayStart)
-    .lte('occurred_at', todayEnd)
 
   // Get today's breaks (from all sessions today)
   const { data: todaySessions } = await supabase
@@ -105,8 +98,6 @@ export default async function CSRDashboardPage() {
   // Use direct stats (more reliable than RPC)
   const displayStats = {
     total_calls: callsCount || 0,
-    total_deposits_count: depositsCount || 0,
-    total_deposits_amount: depositsData?.reduce((sum, d) => sum + (parseFloat(d.amount?.toString() || '0') || 0), 0) || 0,
     total_break_minutes: breakMinutes,
     total_sessions: todaySessions?.length || 0
   }
@@ -241,14 +232,10 @@ export default async function CSRDashboardPage() {
           {/* Today's Summary - Quick Stats */}
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Today's Activity</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-center">
                 <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Calls</p>
                 <p className="text-2xl font-black text-blue-600">{displayStats.total_calls}</p>
-              </div>
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Deposits</p>
-                <p className="text-2xl font-black text-emerald-600">{displayStats.total_deposits_count}</p>
               </div>
               <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
                 <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Breaks</p>
@@ -286,41 +273,6 @@ export default async function CSRDashboardPage() {
               />
               <SubmitButton className="w-full py-2 bg-primary text-primary-foreground font-medium rounded-lg" loadingText="Saving...">
                 Save Call
-              </SubmitButton>
-            </form>
-          </div>
-
-          {/* Log Deposit */}
-          <div className="p-5 bg-card border rounded-xl shadow-sm space-y-3">
-            <h3 className="font-bold flex items-center gap-2 text-emerald-500 text-sm">
-              <DollarSign size={16} />
-              Log Deposit
-            </h3>
-            <form action={logDeposit} className="space-y-3">
-              <input type="hidden" name="sessionId" value={activeSession.id} />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  name="amount" 
-                  placeholder="Amount" 
-                  className="p-2 border rounded-lg bg-background text-sm" 
-                  required 
-                />
-                <input 
-                  type="text" 
-                  name="reference" 
-                  placeholder="Reference #" 
-                  className="p-2 border rounded-lg bg-background text-sm" 
-                />
-              </div>
-              <textarea 
-                name="notes" 
-                placeholder="Deposit notes..." 
-                className="w-full p-2 border rounded-lg bg-background text-sm h-16"
-              />
-              <SubmitButton className="w-full py-2 bg-emerald-500 text-white font-medium rounded-lg" loadingText="Saving...">
-                Save Deposit
               </SubmitButton>
             </form>
           </div>
