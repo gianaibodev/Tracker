@@ -16,6 +16,7 @@ export async function clockIn() {
   })
 
   revalidatePath('/app')
+  redirect('/app')
 }
 
 export async function clockOut(sessionId: string) {
@@ -26,6 +27,7 @@ export async function clockOut(sessionId: string) {
   }).eq('id', sessionId)
 
   revalidatePath('/app')
+  redirect('/app')
 }
 
 export async function startBreak(sessionId: string, breakType: string) {
@@ -41,6 +43,7 @@ export async function startBreak(sessionId: string, breakType: string) {
   })
 
   revalidatePath('/app')
+  redirect('/app')
 }
 
 export async function updateBreakNotes(formData: FormData) {
@@ -57,6 +60,7 @@ export async function updateBreakNotes(formData: FormData) {
   }).eq('id', breakId)
 
   revalidatePath('/app')
+  redirect('/app')
 }
 
 export async function endBreak(breakId: string) {
@@ -66,6 +70,7 @@ export async function endBreak(breakId: string) {
   }).eq('id', breakId)
 
   revalidatePath('/app')
+  redirect('/app')
 }
 
 export async function logCall(formData: FormData) {
@@ -111,4 +116,5 @@ export async function updateRemarks(formData: FormData) {
   }).eq('id', sessionId).eq('user_id', user.id)
 
   revalidatePath('/app')
+  redirect('/app')
 }

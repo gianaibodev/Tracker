@@ -10,82 +10,65 @@ import { SubmitButton } from '@/components/submit-button'
 export default async function CSRDashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
 
-  const { data: activeSession } = await supabase
-    .from('work_sessions')
-    .select('*, break_entries(*)')
-    .eq('user_id', user?.id)
-    .eq('session_status', 'open')
-    .single()
-
-  const { data: lastClosedSession } = !activeSession ? await supabase
-    .from('work_sessions')
-    .select('*')
-    .eq('user_id', user?.id)
-    .eq('session_status', 'closed')
-    .order('clock_out_at', { ascending: false })
-    .limit(1)
-    .single() : { data: null }
-
-  const { data: sessionSummary } = lastClosedSession ? await supabase
-    .rpc('get_session_summary', { p_session_id: lastClosedSession.id })
-    .single() as { data: {
-      total_duration_minutes: number,
-      total_break_minutes: number,
-      clean_work_minutes: number,
-      break_counts: Record<string, number>,
-      username: string
-    } | null } : { data: null }
-
-  const activeBreak = activeSession?.break_entries?.find((b: any) => !b.end_at)
-
-  // Get available break types (no time limits - all breaks are always available)
-  const { data: breakTypes } = await supabase
-    .from('break_allowances')
-    .select('break_type')
-    .eq('is_enabled', true)
-    .order('break_type')
-  // Get stats for today - try RPC first, fallback to direct queries
-  const { data: stats, error: statsError } = await supabase.rpc('get_user_stats', { 
-    p_user_id: user?.id,
-    p_start_date: null,
-    p_end_date: null
-  }).single() as { data: {
-    total_calls: number,
-    total_deposits_count: number,
-    total_deposits_amount: number,
-    total_break_minutes: number,
-    total_sessions: number
-  } | null, error: any }
-  
-  // Fallback: Direct queries if RPC fails or always use direct for more reliable results
+  // Today's date range
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const todayStart = today.toISOString()
   const todayEnd = new Date().toISOString()
 
-  // Get today's calls
-  const { count: callsCount } = await supabase
-    .from('call_entries')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user?.id)
-    .gte('occurred_at', todayStart)
-    .lte('occurred_at', todayEnd)
+  // Batch queries in parallel for speed
+  const [
+    activeSessionResult,
+    breakTypesResult,
+    callStatusesResult,
+    callOutcomesResult,
+    callsCountResult,
+    todaySessionsResult
+  ] = await Promise.all([
+    supabase.from('work_sessions').select('*, break_entries(*)').eq('user_id', user.id).eq('session_status', 'open').single(),
+    supabase.from('break_allowances').select('break_type').eq('is_enabled', true).order('break_type'),
+    supabase.from('call_status_options').select('key, label').eq('is_enabled', true).order('sort_order'),
+    supabase.from('call_outcome_options').select('key, label').eq('is_enabled', true).order('sort_order'),
+    supabase.from('call_entries').select('*', { count: 'exact', head: true }).eq('user_id', user.id).gte('occurred_at', todayStart).lte('occurred_at', todayEnd),
+    supabase.from('work_sessions').select('id').eq('user_id', user.id).gte('clock_in_at', todayStart).lte('clock_in_at', todayEnd)
+  ])
 
+  const activeSession = activeSessionResult.data
+  const breakTypes = breakTypesResult.data
+  const callStatuses = callStatusesResult.data
+  const callOutcomes = callOutcomesResult.data
+  const callsCount = callsCountResult.count || 0
+  const todaySessions = todaySessionsResult.data
 
-  // Get today's breaks (from all sessions today)
-  const { data: todaySessions } = await supabase
-    .from('work_sessions')
-    .select('id')
-    .eq('user_id', user?.id)
-    .gte('clock_in_at', todayStart)
-    .lte('clock_in_at', todayEnd)
+  // Get last closed session summary only if not clocked in
+  let lastClosedSession = null
+  let sessionSummary = null
+  if (!activeSession) {
+    const { data: lastSession } = await supabase
+      .from('work_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('session_status', 'closed')
+      .order('clock_out_at', { ascending: false })
+      .limit(1)
+      .single()
+    
+    if (lastSession) {
+      lastClosedSession = lastSession
+      const { data: summary } = await supabase.rpc('get_session_summary', { p_session_id: lastSession.id }).single()
+      sessionSummary = summary as { total_duration_minutes: number, total_break_minutes: number, clean_work_minutes: number, break_counts: Record<string, number>, username: string } | null
+    }
+  }
 
+  const activeBreak = activeSession?.break_entries?.find((b: any) => !b.end_at)
+
+  // Get breaks for today's sessions
   const sessionIds = todaySessions?.map(s => s.id) || []
-  const { data: breaksData } = sessionIds.length > 0 ? await supabase
-    .from('break_entries')
-    .select('start_at, end_at')
-    .in('session_id', sessionIds) : { data: null }
+  const { data: breaksData } = sessionIds.length > 0 
+    ? await supabase.from('break_entries').select('start_at, end_at').in('session_id', sessionIds) 
+    : { data: null }
 
   const breakMinutes = breaksData?.reduce((total, b) => {
     const end = b.end_at ? new Date(b.end_at) : new Date()
@@ -95,15 +78,11 @@ export default async function CSRDashboardPage() {
 
   const breakCount = breaksData?.length || 0
 
-  // Use direct stats (more reliable than RPC)
   const displayStats = {
-    total_calls: callsCount || 0,
+    total_calls: callsCount,
     total_break_minutes: breakMinutes,
     total_sessions: todaySessions?.length || 0
   }
-
-  const { data: callStatuses } = await supabase.from('call_status_options').select('*').eq('is_enabled', true).order('sort_order')
-  const { data: callOutcomes } = await supabase.from('call_outcome_options').select('*').eq('is_enabled', true).order('sort_order')
 
   return (
     <div className="space-y-6">
