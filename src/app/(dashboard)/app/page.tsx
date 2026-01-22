@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { clockIn, clockOut, startBreak, endBreak, logCall, logDeposit } from './actions'
+import { clockIn, clockOut, startBreak, endBreak, logCall, logDeposit, updateRemarks } from './actions'
 import { Clock, Coffee, Phone, DollarSign, PenLine } from 'lucide-react'
 import { FormattedTime } from '@/components/ui/date-formatter'
+
 
 export default async function CSRDashboardPage() {
   const supabase = await createClient()
@@ -144,7 +145,30 @@ export default async function CSRDashboardPage() {
         )}
       </div>
 
+      {/* Remarks Section - Only when clocked in */}
+      {activeSession && !activeBreak && (
+        <div className="p-6 bg-card border rounded-2xl shadow-sm space-y-4">
+          <h3 className="font-bold flex items-center gap-2">
+            <PenLine size={18} className="text-muted-foreground" />
+            Session Remarks
+          </h3>
+          <form action={updateRemarks} className="space-y-3">
+            <input type="hidden" name="sessionId" value={activeSession.id} />
+            <textarea 
+              name="remarks" 
+              defaultValue={activeSession.remarks || ''}
+              placeholder="Add any notes or remarks about your shift..."
+              className="w-full p-3 border rounded-lg bg-background text-sm h-24 resize-none"
+            />
+            <button type="submit" className="w-full py-2 px-4 bg-secondary text-secondary-foreground font-medium rounded-lg hover:bg-secondary/80 transition-colors">
+              Save Remarks
+            </button>
+          </form>
+        </div>
+      )}
+
       {/* Break Quotas Card */}
+
       <div className="p-6 bg-card border rounded-2xl shadow-sm space-y-4">
         <h3 className="font-bold flex items-center gap-2">
            <Coffee size={18} className="text-muted-foreground" />

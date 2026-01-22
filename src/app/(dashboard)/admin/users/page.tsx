@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { Users, Shield, User as UserIcon } from 'lucide-react'
 import Link from 'next/link'
+import { toggleUserStatus, updateUserRole } from './actions'
 
 export default async function AdminUsersPage() {
+
   const supabase = await createClient()
 
   const { data: profiles } = await supabase
@@ -59,13 +61,38 @@ export default async function AdminUsersPage() {
                   )}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <Link 
-                    href={`/admin/users/${profile.id}`}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    View Details
-                  </Link>
+                  <div className="flex items-center justify-end gap-2">
+                    <form action={toggleUserStatus.bind(null, profile.id, !profile.is_active)}>
+                      <button 
+                        type="submit"
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                          profile.is_active 
+                            ? 'bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive' 
+                            : 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
+                        }`}
+                      >
+                        {profile.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </form>
+                    {profile.role !== 'admin' && (
+                      <form action={updateUserRole.bind(null, profile.id, 'admin')}>
+                        <button 
+                          type="submit"
+                          className="px-3 py-1 text-xs font-medium bg-purple-500/10 text-purple-600 rounded-md hover:bg-purple-500/20 transition-colors"
+                        >
+                          Make Admin
+                        </button>
+                      </form>
+                    )}
+                    <Link 
+                      href={`/admin/users/${profile.id}`}
+                      className="px-3 py-1 text-xs font-medium text-primary hover:underline"
+                    >
+                      View Details
+                    </Link>
+                  </div>
                 </td>
+
               </tr>
             ))}
           </tbody>

@@ -9,18 +9,32 @@ export default async function SettingsPage() {
   const { data: statuses } = await supabase.from('call_status_options').select('*').order('sort_order')
   const { data: outcomes } = await supabase.from('call_outcome_options').select('*').order('sort_order')
 
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+import { CheckCircle2 } from 'lucide-react'
+
+export default async function SettingsPage() {
+  const supabase = await createClient()
+
+  const { data: settings } = await supabase.from('org_settings').select('*').single()
+  const { data: allowances } = await supabase.from('break_allowances').select('*').order('break_type')
+  const { data: statuses } = await supabase.from('call_status_options').select('*').order('sort_order')
+  const { data: outcomes } = await supabase.from('call_outcome_options').select('*').order('sort_order')
+
   async function updateSettings(formData: FormData) {
     'use server'
     const supabase = await createClient()
     const timezone = formData.get('timezone') as string
     const resetMode = formData.get('break_reset_mode') as string
 
-    await supabase.from('org_settings').update({
+    const { error } = await supabase.from('org_settings').update({
       timezone,
       break_reset_mode: resetMode,
-    }).eq('id', settings.id)
-    
-    revalidatePath('/admin/settings')
+    }).eq('id', settings?.id)
+
+    if (!error) {
+      revalidatePath('/admin/settings')
+    }
   }
 
   async function updateAllowance(formData: FormData) {
@@ -31,14 +45,17 @@ export default async function SettingsPage() {
     const maxMinutes = parseInt(formData.get('max_minutes') as string)
     const isEnabled = formData.get('is_enabled') === 'on'
 
-    await supabase.from('break_allowances').update({
+    const { error } = await supabase.from('break_allowances').update({
       max_count: maxCount,
       max_minutes: maxMinutes,
       is_enabled: isEnabled,
     }).eq('id', id)
-    
-    revalidatePath('/admin/settings')
+
+    if (!error) {
+      revalidatePath('/admin/settings')
+    }
   }
+
 
   return (
     <div className="space-y-10 max-w-4xl">

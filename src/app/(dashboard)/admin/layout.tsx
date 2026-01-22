@@ -69,10 +69,13 @@ export default async function AdminLayout({
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 border-b flex items-center px-6 md:px-8 justify-between bg-card">
            <h1 className="text-lg font-semibold md:hidden">Admin Panel</h1>
-           <div className="md:hidden">
-              {/* Mobile menu could go here */}
-           </div>
+           <nav className="md:hidden flex gap-2">
+              <Link href="/admin" className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent">Overview</Link>
+              <Link href="/admin/users" className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent">Users</Link>
+              <Link href="/admin/settings" className="px-3 py-1 text-sm font-medium rounded-md hover:bg-accent">Settings</Link>
+           </nav>
         </header>
+
         <div className="flex-1 overflow-y-auto p-6 md:p-8">
           {children}
         </div>
