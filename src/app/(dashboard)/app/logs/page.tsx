@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { Phone, DollarSign, Coffee } from 'lucide-react'
+import { FormattedDate, FormattedTime } from '@/components/ui/date-formatter'
 
 export default async function CSRLogsPage() {
   const supabase = await createClient()
@@ -29,9 +30,9 @@ export default async function CSRLogsPage() {
           <div key={session.id} className="p-4 bg-card border rounded-2xl shadow-sm space-y-4">
             <div className="flex justify-between items-center border-b pb-3">
               <div>
-                <p className="text-sm font-bold">{new Date(session.work_date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+                <p className="text-sm font-bold"><FormattedDate date={session.work_date} options={{ weekday: 'long', month: 'short', day: 'numeric' }} /></p>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                  {new Date(session.clock_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {session.clock_out_at ? new Date(session.clock_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Active'}
+                  <FormattedTime date={session.clock_in_at} options={{ hour: '2-digit', minute: '2-digit' }} /> - {session.clock_out_at ? <FormattedTime date={session.clock_out_at} options={{ hour: '2-digit', minute: '2-digit' }} /> : 'Active'}
                 </p>
               </div>
               <div className="text-right">

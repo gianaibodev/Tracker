@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { Phone, DollarSign, Coffee, Clock, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
+import { FormattedDate, FormattedTime } from '@/components/ui/date-formatter'
 
 export default async function AdminUserDrilldownPage({
   params,
@@ -116,9 +117,9 @@ export default async function AdminUserDrilldownPage({
               <div key={session.id} className="p-6 bg-card border rounded-xl shadow-sm space-y-6">
                 <div className="flex flex-wrap justify-between items-center gap-2 border-b pb-4">
                   <div>
-                    <p className="font-bold">{new Date(session.work_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p className="font-bold"><FormattedDate date={session.work_date} options={{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }} /></p>
                     <p className="text-sm text-muted-foreground">
-                      Shift: {new Date(session.clock_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} - {session.clock_out_at ? new Date(session.clock_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'In Progress'}
+                      Shift: <FormattedTime date={session.clock_in_at} options={{ hour: '2-digit', minute: '2-digit', hour12: true }} /> - {session.clock_out_at ? <FormattedTime date={session.clock_out_at} options={{ hour: '2-digit', minute: '2-digit', hour12: true }} /> : 'In Progress'}
                     </p>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${session.session_status === 'open' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
@@ -129,8 +130,8 @@ export default async function AdminUserDrilldownPage({
                 <div className="bg-accent/5 p-6 rounded-2xl border border-accent/10 space-y-2">
                   <h4 className="text-md font-bold mb-3">Shift Summary for @{profile.username}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1 font-mono text-sm">
-                    <p><span className="font-bold">Check In:</span> {new Date(session.clock_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase()}</p>
-                    <p><span className="font-bold">Check Out:</span> {session.clock_out_at ? new Date(session.clock_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase() : 'N/A'}</p>
+                    <p><span className="font-bold">Check In:</span> <FormattedTime date={session.clock_in_at} options={{ hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }} /></p>
+                    <p><span className="font-bold">Check Out:</span> {session.clock_out_at ? <FormattedTime date={session.clock_out_at} options={{ hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }} /> : 'N/A'}</p>
                     <p><span className="font-bold">Total Hours:</span> {summary?.total_duration_minutes ? (summary.total_duration_minutes / 60).toFixed(1) : '0.0'}</p>
                     <p><span className="font-bold">Clean Hours:</span> {summary?.clean_work_minutes ? (summary.clean_work_minutes / 60).toFixed(2) : '0.00'}</p>
                     

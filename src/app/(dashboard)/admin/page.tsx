@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Phone, DollarSign, Users, Coffee } from 'lucide-react'
 import Link from 'next/link'
+import { FormattedTime } from '@/components/ui/date-formatter'
 
 export default async function AdminOverviewPage() {
   const supabase = await createClient()
@@ -105,7 +106,7 @@ export default async function AdminOverviewPage() {
                 return (
                   <tr key={session.id} className="hover:bg-accent/50 transition-colors">
                     <td className="px-6 py-4 font-medium">{session.profiles?.full_name}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{new Date(session.clock_in_at).toLocaleTimeString()}</td>
+                    <td className="px-6 py-4 text-muted-foreground"><FormattedTime date={session.clock_in_at} /></td>
                     <td className="px-6 py-4">
                       {activeBreak ? (
                         <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-bold uppercase">

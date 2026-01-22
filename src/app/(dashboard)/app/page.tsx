@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { clockIn, clockOut, startBreak, endBreak, logCall, logDeposit } from './actions'
 import { Clock, Coffee, Phone, DollarSign, PenLine } from 'lucide-react'
+import { FormattedTime } from '@/components/ui/date-formatter'
 
 export default async function CSRDashboardPage() {
   const supabase = await createClient()
@@ -78,8 +79,8 @@ export default async function CSRDashboardPage() {
                 <h3 className="text-lg font-bold mb-4">Shift Summary for @{sessionSummary.username}</h3>
                 
                 <div className="space-y-1 font-mono text-sm">
-                  <p><span className="font-bold">Check In:</span> {new Date(lastClosedSession.clock_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase()}</p>
-                  <p><span className="font-bold">Check Out:</span> {new Date(lastClosedSession.clock_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase()}</p>
+                  <p><span className="font-bold">Check In:</span> <FormattedTime date={lastClosedSession.clock_in_at} options={{ hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }} /></p>
+                  <p><span className="font-bold">Check Out:</span> <FormattedTime date={lastClosedSession.clock_out_at} options={{ hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }} /></p>
                   <p><span className="font-bold">Total Hours:</span> {sessionSummary?.total_duration_minutes ? (sessionSummary.total_duration_minutes / 60).toFixed(1) : '0.0'}</p>
                   <p><span className="font-bold">Clean Hours:</span> {sessionSummary?.clean_work_minutes ? (sessionSummary.clean_work_minutes / 60).toFixed(2) : '0.00'}</p>
                   
@@ -117,7 +118,7 @@ export default async function CSRDashboardPage() {
                     <Coffee className="text-amber-500" size={24} />
                     <div>
                       <p className="text-sm font-bold text-amber-500 uppercase">On {activeBreak.break_type} Break</p>
-                      <p className="text-xs text-muted-foreground italic">Started at {new Date(activeBreak.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                      <p className="text-xs text-muted-foreground italic">Started at <FormattedTime date={activeBreak.start_at} options={{ hour: '2-digit', minute: '2-digit', hour12: true }} /></p>
                     </div>
                   </div>
                   <form action={endBreak.bind(null, activeBreak.id)}>
