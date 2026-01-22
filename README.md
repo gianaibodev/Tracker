@@ -15,3 +15,4 @@ A mobile-first, responsive performance and time tracker for Customer Service Rep
 - Supabase (Auth & Database)
 - Tailwind CSS
 - Lucide Icons
+
