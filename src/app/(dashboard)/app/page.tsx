@@ -32,7 +32,7 @@ export default async function CSRDashboardPage() {
       username: string
     } | null } : { data: null }
 
-  const activeBreak = activeSession?.break_entries?.find(b => !b.end_at)
+  const activeBreak = activeSession?.break_entries?.find((b: any) => !b.end_at)
 
   // RPC for remaining allowances
   const { data: allowances } = await supabase.rpc('get_remaining_allowances', { p_user_id: user?.id }) as { data: Array<{

@@ -14,7 +14,7 @@ export default async function AdminOverviewPage() {
     on_break_count: number 
   } | null
   
-  const { data: activeSessions } = await supabase
+  const { data: activeSessionsResult } = await supabase
     .from('work_sessions')
     .select(`
       *,
@@ -23,6 +23,8 @@ export default async function AdminOverviewPage() {
     `)
     .eq('session_status', 'open')
     .order('clock_in_at', { ascending: false })
+
+  const activeSessions = activeSessionsResult as (any[] | null)
 
   return (
     <div className="space-y-8">
@@ -98,8 +100,8 @@ export default async function AdminOverviewPage() {
               </tr>
             </thead>
             <tbody className="divide-y text-sm">
-              {activeSessions?.map(session => {
-                const activeBreak = session.break_entries?.find(b => !b.end_at)
+              {activeSessions?.map((session: any) => {
+                const activeBreak = session.break_entries?.find((b: any) => !b.end_at)
                 return (
                   <tr key={session.id} className="hover:bg-accent/50 transition-colors">
                     <td className="px-6 py-4 font-medium">{session.profiles?.full_name}</td>
