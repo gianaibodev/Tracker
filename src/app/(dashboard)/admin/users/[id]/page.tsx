@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import { Phone, DollarSign, Coffee, Clock, ChevronLeft } from 'lucide-react'
+import { Phone, Coffee, Clock, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { FormattedDate, FormattedTime } from '@/components/ui/date-formatter'
 
@@ -33,7 +33,6 @@ export default async function AdminUserDrilldownPage({
     .select(`
       *,
       call_entries(*),
-      deposit_entries(*),
       break_entries(*)
     `)
     .eq('user_id', id)
@@ -66,7 +65,7 @@ export default async function AdminUserDrilldownPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-6 bg-card border rounded-xl shadow-sm">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-500/10 rounded-lg text-blue-500">
@@ -75,19 +74,6 @@ export default async function AdminUserDrilldownPage({
             <div>
               <p className="text-sm font-medium text-muted-foreground">Today's Calls</p>
               <h3 className="text-2xl font-bold">{stats?.total_calls || 0}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6 bg-card border rounded-xl shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-500/10 rounded-lg text-emerald-500">
-              <DollarSign size={24} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Today's Deposits</p>
-              <h3 className="text-2xl font-bold">${stats?.total_deposits_amount || 0}</h3>
-              <p className="text-xs text-muted-foreground">{stats?.total_deposits_count || 0} entries</p>
             </div>
           </div>
         </div>
@@ -143,20 +129,10 @@ export default async function AdminUserDrilldownPage({
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-3 bg-muted/20 rounded-xl space-y-1 text-center">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold">Calls</p>
                     <p className="text-lg font-bold">{session.call_entries?.length || 0}</p>
-                  </div>
-                  <div className="p-3 bg-muted/20 rounded-xl space-y-1 text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Deposits</p>
-                    <p className="text-lg font-bold">{session.deposit_entries?.length || 0}</p>
-                  </div>
-                  <div className="p-3 bg-muted/20 rounded-xl space-y-1 text-center col-span-2 md:col-span-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Deposit Sum</p>
-                    <p className="text-lg font-bold text-emerald-600">
-                      ${session.deposit_entries?.reduce((acc: number, d: any) => acc + Number(d.amount), 0).toFixed(2) || '0.00'}
-                    </p>
                   </div>
                 </div>
 

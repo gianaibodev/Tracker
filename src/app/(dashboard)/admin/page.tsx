@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { Phone, DollarSign, Users, Coffee } from 'lucide-react'
+import { Phone, Users, Coffee } from 'lucide-react'
 import Link from 'next/link'
 import { FormattedTime } from '@/components/ui/date-formatter'
 
@@ -34,7 +34,7 @@ export default async function AdminOverviewPage() {
         <p className="text-muted-foreground">Real-time performance metrics and team overview</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-6 bg-card border rounded-xl shadow-sm">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-500/10 rounded-lg text-blue-500">
@@ -43,19 +43,6 @@ export default async function AdminOverviewPage() {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Calls Made</p>
               <h3 className="text-2xl font-bold">{kpis?.total_calls || 0}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6 bg-card border rounded-xl shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-500/10 rounded-lg text-emerald-500">
-              <DollarSign size={24} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Deposits</p>
-              <h3 className="text-2xl font-bold">${kpis?.total_deposits_amount || 0}</h3>
-              <p className="text-xs text-muted-foreground">{kpis?.total_deposits_count || 0} entries</p>
             </div>
           </div>
         </div>
