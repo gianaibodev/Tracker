@@ -4,6 +4,7 @@ import { startBreakWithNotes } from './break-actions'
 import { Clock, Coffee, Phone, DollarSign, PenLine } from 'lucide-react'
 import { FormattedTime } from '@/components/ui/date-formatter'
 import { BreakButton } from '@/components/break-button'
+import { SubmitButton } from '@/components/submit-button'
 
 
 
@@ -72,10 +73,10 @@ export default async function CSRDashboardPage() {
             </div>
             
             <form action={clockIn}>
-              <button className="flex items-center gap-2 mx-auto px-10 py-4 bg-primary text-primary-foreground rounded-full font-bold text-lg shadow-lg hover:opacity-90 transition-opacity">
+              <SubmitButton className="flex items-center gap-2 mx-auto px-10 py-4 bg-primary text-primary-foreground rounded-full font-bold text-lg shadow-lg hover:opacity-90 transition-opacity" loadingText="Clocking In...">
                 <Clock size={24} />
                 Clock In Now
-              </button>
+              </SubmitButton>
             </form>
 
             {sessionSummary && (
@@ -110,9 +111,9 @@ export default async function CSRDashboardPage() {
                 <p className="text-xs text-muted-foreground mt-1">Session started</p>
               </div>
               <form action={clockOut.bind(null, activeSession.id)}>
-                <button className="px-4 py-2 border border-destructive text-destructive rounded-lg text-sm font-bold hover:bg-destructive/10 transition-colors">
+                <SubmitButton className="px-4 py-2 border border-destructive text-destructive rounded-lg text-sm font-bold hover:bg-destructive/10 transition-colors" loadingText="Clocking Out...">
                   Clock Out
-                </button>
+                </SubmitButton>
               </form>
             </div>
 
@@ -132,9 +133,9 @@ export default async function CSRDashboardPage() {
                     </div>
                   </div>
                   <form action={endBreak.bind(null, activeBreak.id)}>
-                    <button className="w-full py-3 bg-amber-500 text-white rounded-xl text-base font-bold shadow-md hover:bg-amber-600 transition-colors">
+                    <SubmitButton className="w-full py-3 bg-amber-500 text-white rounded-xl text-base font-bold shadow-md hover:bg-amber-600 transition-colors" loadingText="Ending Break...">
                       End Break
-                    </button>
+                    </SubmitButton>
                   </form>
                 </div>
               ) : (
@@ -219,9 +220,9 @@ export default async function CSRDashboardPage() {
                 placeholder="Call remarks..." 
                 className="w-full p-2 border rounded-lg bg-background text-sm h-16"
               />
-              <button type="submit" className="w-full py-2 bg-primary text-primary-foreground font-medium rounded-lg">
+              <SubmitButton className="w-full py-2 bg-primary text-primary-foreground font-medium rounded-lg" loadingText="Saving...">
                 Save Call
-              </button>
+              </SubmitButton>
             </form>
           </div>
 
@@ -254,9 +255,9 @@ export default async function CSRDashboardPage() {
                 placeholder="Deposit notes..." 
                 className="w-full p-2 border rounded-lg bg-background text-sm h-16"
               />
-              <button type="submit" className="w-full py-2 bg-emerald-500 text-white font-medium rounded-lg">
+              <SubmitButton className="w-full py-2 bg-emerald-500 text-white font-medium rounded-lg" loadingText="Saving...">
                 Save Deposit
-              </button>
+              </SubmitButton>
             </form>
           </div>
 
@@ -274,9 +275,9 @@ export default async function CSRDashboardPage() {
                 placeholder="Add any notes about your shift..."
                 className="w-full p-2 border rounded-lg bg-background text-sm h-20 resize-none"
               />
-              <button type="submit" className="w-full py-2 bg-secondary text-secondary-foreground font-medium rounded-lg">
+              <SubmitButton className="w-full py-2 bg-secondary text-secondary-foreground font-medium rounded-lg" loadingText="Saving...">
                 Save Remarks
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </div>

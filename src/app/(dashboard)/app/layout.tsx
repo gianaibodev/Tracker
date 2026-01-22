@@ -16,6 +16,17 @@ export default async function CSRLayout({
     redirect('/login')
   }
 
+  // Check if user is admin and redirect to admin dashboard
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role === 'admin') {
+    redirect('/admin')
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Main Content */}

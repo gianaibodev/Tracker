@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Coffee } from 'lucide-react'
 import { startBreakWithNotes } from '@/app/(dashboard)/app/break-actions'
+import { SubmitButton } from '@/components/submit-button'
 
 export function BreakButton({ breakType, sessionId, remainingCount }: { breakType: string, sessionId: string, remainingCount: number }) {
   const [showForm, setShowForm] = useState(false)
@@ -26,12 +27,9 @@ export function BreakButton({ breakType, sessionId, remainingCount }: { breakTyp
         </div>
         
         <div className="flex gap-2">
-          <button
-            type="submit"
-            className="flex-1 py-2 px-4 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-opacity"
-          >
+          <SubmitButton className="flex-1 py-2 px-4 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-opacity" loadingText="Starting...">
             Start Break
-          </button>
+          </SubmitButton>
           <button
             type="button"
             onClick={() => {
