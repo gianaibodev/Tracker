@@ -90,3 +90,19 @@ export async function logDeposit(formData: FormData) {
 
   revalidatePath('/app')
 }
+
+export async function updateRemarks(formData: FormData) {
+  'use server'
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const sessionId = formData.get('sessionId') as string
+  const remarks = formData.get('remarks') as string
+
+  await supabase.from('work_sessions').update({
+    remarks: remarks
+  }).eq('id', sessionId).eq('user_id', user.id)
+
+  revalidatePath('/app')
+}
