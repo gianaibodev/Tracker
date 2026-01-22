@@ -80,8 +80,8 @@ export default async function CSRDashboardPage() {
                 <div className="space-y-1 font-mono text-sm">
                   <p><span className="font-bold">Check In:</span> {new Date(lastClosedSession.clock_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase()}</p>
                   <p><span className="font-bold">Check Out:</span> {new Date(lastClosedSession.clock_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase()}</p>
-                  <p><span className="font-bold">Total Hours:</span> {(sessionSummary.total_duration_minutes / 60).toFixed(1)}</p>
-                  <p><span className="font-bold">Clean Hours:</span> {(sessionSummary.clean_work_minutes / 60).toFixed(2)}</p>
+                  <p><span className="font-bold">Total Hours:</span> {sessionSummary?.total_duration_minutes ? (sessionSummary.total_duration_minutes / 60).toFixed(1) : '0.0'}</p>
+                  <p><span className="font-bold">Clean Hours:</span> {sessionSummary?.clean_work_minutes ? (sessionSummary.clean_work_minutes / 60).toFixed(2) : '0.00'}</p>
                   
                   {Object.entries(sessionSummary.break_counts || {}).map(([type, count]) => (
                     <p key={type}>

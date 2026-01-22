@@ -131,8 +131,8 @@ export default async function AdminUserDrilldownPage({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1 font-mono text-sm">
                     <p><span className="font-bold">Check In:</span> {new Date(session.clock_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase()}</p>
                     <p><span className="font-bold">Check Out:</span> {session.clock_out_at ? new Date(session.clock_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase() : 'N/A'}</p>
-                    <p><span className="font-bold">Total Hours:</span> {summary ? (summary.total_duration_minutes / 60).toFixed(1) : '0.0'}</p>
-                    <p><span className="font-bold">Clean Hours:</span> {summary ? (summary.clean_work_minutes / 60).toFixed(2) : '0.00'}</p>
+                    <p><span className="font-bold">Total Hours:</span> {summary?.total_duration_minutes ? (summary.total_duration_minutes / 60).toFixed(1) : '0.0'}</p>
+                    <p><span className="font-bold">Clean Hours:</span> {summary?.clean_work_minutes ? (summary.clean_work_minutes / 60).toFixed(2) : '0.00'}</p>
                     
                     {summary && Object.entries(summary.break_counts || {}).map(([type, count]) => (
                       <p key={type}>
