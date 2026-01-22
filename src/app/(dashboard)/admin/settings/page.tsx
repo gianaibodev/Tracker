@@ -9,18 +9,6 @@ export default async function SettingsPage() {
   const { data: statuses } = await supabase.from('call_status_options').select('*').order('sort_order')
   const { data: outcomes } = await supabase.from('call_outcome_options').select('*').order('sort_order')
 
-import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
-import { CheckCircle2 } from 'lucide-react'
-
-export default async function SettingsPage() {
-  const supabase = await createClient()
-
-  const { data: settings } = await supabase.from('org_settings').select('*').single()
-  const { data: allowances } = await supabase.from('break_allowances').select('*').order('break_type')
-  const { data: statuses } = await supabase.from('call_status_options').select('*').order('sort_order')
-  const { data: outcomes } = await supabase.from('call_outcome_options').select('*').order('sort_order')
-
   async function updateSettings(formData: FormData) {
     'use server'
     const supabase = await createClient()
