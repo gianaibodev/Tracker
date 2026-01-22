@@ -27,17 +27,6 @@ export async function clockOut(sessionId: string) {
   revalidatePath('/app')
 }
 
-export async function startBreak(sessionId: string, breakType: string) {
-  const supabase = await createClient()
-  await supabase.from('break_entries').insert({
-    session_id: sessionId,
-    break_type: breakType,
-    start_at: new Date().toISOString()
-  })
-
-  revalidatePath('/app')
-}
-
 export async function endBreak(breakId: string) {
   const supabase = await createClient()
   await supabase.from('break_entries').update({

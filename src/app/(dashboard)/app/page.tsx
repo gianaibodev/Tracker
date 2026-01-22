@@ -1,7 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import { clockIn, clockOut, startBreak, endBreak, logCall, logDeposit, updateRemarks } from './actions'
+import { clockIn, clockOut, endBreak, logCall, logDeposit, updateRemarks } from './actions'
+import { startBreakWithNotes } from './break-actions'
 import { Clock, Coffee, Phone, DollarSign, PenLine } from 'lucide-react'
 import { FormattedTime } from '@/components/ui/date-formatter'
+import { BreakButton } from '@/components/break-button'
+
 
 
 export default async function CSRDashboardPage() {
@@ -59,18 +62,18 @@ export default async function CSRDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Session Status Card */}
+      {/* STEP 1: Clock In/Out - Most Important */}
       <div className="p-6 bg-card border rounded-2xl shadow-sm">
         {!activeSession ? (
-          <div className="text-center py-4 space-y-6">
+          <div className="text-center py-6 space-y-4">
             <div className="space-y-2">
-              <h2 className="text-xl font-bold">You are clocked out</h2>
-              <p className="text-sm text-muted-foreground">Ready to start your shift?</p>
+              <h2 className="text-2xl font-bold">Welcome Back!</h2>
+              <p className="text-sm text-muted-foreground">Start your shift by clocking in</p>
             </div>
             
             <form action={clockIn}>
-              <button className="flex items-center gap-2 mx-auto px-8 py-3 bg-primary text-primary-foreground rounded-full font-bold shadow-lg hover:opacity-90 transition-opacity">
-                <Clock size={20} />
+              <button className="flex items-center gap-2 mx-auto px-10 py-4 bg-primary text-primary-foreground rounded-full font-bold text-lg shadow-lg hover:opacity-90 transition-opacity">
+                <Clock size={24} />
                 Clock In Now
               </button>
             </form>
@@ -99,11 +102,12 @@ export default async function CSRDashboardPage() {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center pb-4 border-b">
               <div>
-                <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Active Session</p>
-                <h2 className="text-2xl font-bold">Clocked In</h2>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Step 1: Status</p>
+                <h2 className="text-2xl font-bold text-emerald-600">✓ Clocked In</h2>
+                <p className="text-xs text-muted-foreground mt-1">Session started</p>
               </div>
               <form action={clockOut.bind(null, activeSession.id)}>
                 <button className="px-4 py-2 border border-destructive text-destructive rounded-lg text-sm font-bold hover:bg-destructive/10 transition-colors">
@@ -112,32 +116,43 @@ export default async function CSRDashboardPage() {
               </form>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 pt-2">
+            {/* STEP 2: Break Management - Priority */}
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-3">Step 2: Take a Break</p>
               {activeBreak ? (
-                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex justify-between items-center">
+                <div className="p-5 bg-amber-500/10 border-2 border-amber-500/30 rounded-xl space-y-3">
                   <div className="flex items-center gap-3">
-                    <Coffee className="text-amber-500" size={24} />
-                    <div>
-                      <p className="text-sm font-bold text-amber-500 uppercase">On {activeBreak.break_type} Break</p>
-                      <p className="text-xs text-muted-foreground italic">Started at <FormattedTime date={activeBreak.start_at} options={{ hour: '2-digit', minute: '2-digit', hour12: true }} /></p>
+                    <Coffee className="text-amber-500" size={28} />
+                    <div className="flex-1">
+                      <p className="text-base font-bold text-amber-600 uppercase">On {activeBreak.break_type} Break</p>
+                      <p className="text-xs text-muted-foreground">Started at <FormattedTime date={activeBreak.start_at} options={{ hour: '2-digit', minute: '2-digit', hour12: true }} /></p>
+                      {activeBreak.notes && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">"{activeBreak.notes}"</p>
+                      )}
                     </div>
                   </div>
                   <form action={endBreak.bind(null, activeBreak.id)}>
-                    <button className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-bold shadow-md hover:bg-amber-600">
+                    <button className="w-full py-3 bg-amber-500 text-white rounded-xl text-base font-bold shadow-md hover:bg-amber-600 transition-colors">
                       End Break
                     </button>
                   </form>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {allowances?.filter(a => a.remaining_count > 0).map(a => (
-                    <form key={a.break_type} action={startBreak.bind(null, activeSession.id, a.break_type)}>
-                      <button className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-full text-sm font-bold hover:bg-secondary/80 transition-colors uppercase">
-                        <Coffee size={16} />
-                        {a.break_type}
-                      </button>
-                    </form>
-                  ))}
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">Select a break type and add remarks:</p>
+                  <div className="grid grid-cols-1 gap-3">
+                    {allowances?.filter(a => a.remaining_count > 0).map(a => (
+                      <BreakButton 
+                        key={a.break_type} 
+                        breakType={a.break_type} 
+                        sessionId={activeSession.id}
+                        remainingCount={a.remaining_count}
+                      />
+                    ))}
+                    {(!allowances || allowances.filter(a => a.remaining_count > 0).length === 0) && (
+                      <p className="text-sm text-muted-foreground text-center py-4">No breaks available</p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -145,75 +160,51 @@ export default async function CSRDashboardPage() {
         )}
       </div>
 
-      {/* Remarks Section - Only when clocked in */}
-      {activeSession && !activeBreak && (
-        <div className="p-6 bg-card border rounded-2xl shadow-sm space-y-4">
-          <h3 className="font-bold flex items-center gap-2">
-            <PenLine size={18} className="text-muted-foreground" />
-            Session Remarks
-          </h3>
-          <form action={updateRemarks} className="space-y-3">
-            <input type="hidden" name="sessionId" value={activeSession.id} />
-            <textarea 
-              name="remarks" 
-              defaultValue={activeSession.remarks || ''}
-              placeholder="Add any notes or remarks about your shift..."
-              className="w-full p-3 border rounded-lg bg-background text-sm h-24 resize-none"
-            />
-            <button type="submit" className="w-full py-2 px-4 bg-secondary text-secondary-foreground font-medium rounded-lg hover:bg-secondary/80 transition-colors">
-              Save Remarks
-            </button>
-          </form>
+      {/* Break Allowances - Quick Reference */}
+      {activeSession && (
+        <div className="p-4 bg-muted/30 border rounded-xl">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">Break Allowances</p>
+          <div className="flex gap-4 text-sm">
+            {allowances?.map(a => (
+              <div key={a.break_type} className="flex items-center gap-2">
+                <span className="font-bold capitalize">{a.break_type}:</span>
+                <span className="text-muted-foreground">{a.remaining_count} left</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Break Quotas Card */}
-
-      <div className="p-6 bg-card border rounded-2xl shadow-sm space-y-4">
-        <h3 className="font-bold flex items-center gap-2">
-           <Coffee size={18} className="text-muted-foreground" />
-           Break Allowances Left
-        </h3>
-        <div className="grid grid-cols-2 gap-4">
-          {allowances?.map(a => (
-            <div key={a.break_type} className="p-3 bg-accent/50 rounded-xl">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-tighter mb-1">{a.break_type}</p>
-              <div className="flex justify-between items-end">
-                <p className="text-xl font-bold">{a.remaining_count}</p>
-                <p className="text-xs text-muted-foreground">{Math.max(0, Math.round(a.remaining_minutes))}m left</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Today's Totals Summary */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-center">
-          <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Calls</p>
-          <p className="text-xl font-black text-blue-600">{stats?.total_calls || 0}</p>
-        </div>
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-center">
-          <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Deposits</p>
-          <p className="text-xl font-black text-emerald-600">{stats?.total_deposits_count || 0}</p>
-        </div>
-        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center">
-          <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Break Mins</p>
-          <p className="text-xl font-black text-amber-600">{Math.round(stats?.total_break_minutes || 0)}</p>
-        </div>
-      </div>
-
+      {/* STEP 3: Activity Logging - Moved to Bottom */}
       {activeSession && !activeBreak && (
-        <div className="grid grid-cols-1 gap-6">
-          {/* Add Call Card */}
-          <div className="p-6 bg-card border rounded-2xl shadow-sm space-y-4">
-            <h3 className="font-bold flex items-center gap-2 text-primary">
-              <Phone size={18} />
+        <div className="space-y-6 pt-4 border-t">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Step 3: Log Activities (Optional)</p>
+          
+          {/* Today's Summary - Quick Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-center">
+              <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Calls</p>
+              <p className="text-xl font-black text-blue-600">{stats?.total_calls || 0}</p>
+            </div>
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+              <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Deposits</p>
+              <p className="text-xl font-black text-emerald-600">{stats?.total_deposits_count || 0}</p>
+            </div>
+            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
+              <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Break Mins</p>
+              <p className="text-xl font-black text-amber-600">{Math.round(stats?.total_break_minutes || 0)}</p>
+            </div>
+          </div>
+
+          {/* Log Call */}
+          <div className="p-5 bg-card border rounded-xl shadow-sm space-y-3">
+            <h3 className="font-bold flex items-center gap-2 text-primary text-sm">
+              <Phone size={16} />
               Log a Call
             </h3>
             <form action={logCall} className="space-y-3">
               <input type="hidden" name="sessionId" value={activeSession.id} />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <select name="status" className="p-2 border rounded-lg bg-background text-sm" required>
                   <option value="">Status</option>
                   {callStatuses?.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
@@ -226,23 +217,23 @@ export default async function CSRDashboardPage() {
               <textarea 
                 name="notes" 
                 placeholder="Call remarks..." 
-                className="w-full p-2 border rounded-lg bg-background text-sm h-20"
+                className="w-full p-2 border rounded-lg bg-background text-sm h-16"
               />
-              <button type="submit" className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-xl shadow-md">
-                Save Call Entry
+              <button type="submit" className="w-full py-2 bg-primary text-primary-foreground font-medium rounded-lg">
+                Save Call
               </button>
             </form>
           </div>
 
-          {/* Add Deposit Card */}
-          <div className="p-6 bg-card border rounded-2xl shadow-sm space-y-4">
-            <h3 className="font-bold flex items-center gap-2 text-emerald-500">
-              <DollarSign size={18} />
+          {/* Log Deposit */}
+          <div className="p-5 bg-card border rounded-xl shadow-sm space-y-3">
+            <h3 className="font-bold flex items-center gap-2 text-emerald-500 text-sm">
+              <DollarSign size={16} />
               Log Deposit
             </h3>
             <form action={logDeposit} className="space-y-3">
               <input type="hidden" name="sessionId" value={activeSession.id} />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <input 
                   type="number" 
                   step="0.01" 
@@ -261,10 +252,30 @@ export default async function CSRDashboardPage() {
               <textarea 
                 name="notes" 
                 placeholder="Deposit notes..." 
-                className="w-full p-2 border rounded-lg bg-background text-sm h-20"
+                className="w-full p-2 border rounded-lg bg-background text-sm h-16"
               />
-              <button type="submit" className="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl shadow-md">
+              <button type="submit" className="w-full py-2 bg-emerald-500 text-white font-medium rounded-lg">
                 Save Deposit
+              </button>
+            </form>
+          </div>
+
+          {/* Session Remarks */}
+          <div className="p-5 bg-card border rounded-xl shadow-sm space-y-3">
+            <h3 className="font-bold flex items-center gap-2 text-sm">
+              <PenLine size={16} className="text-muted-foreground" />
+              Session Remarks
+            </h3>
+            <form action={updateRemarks} className="space-y-2">
+              <input type="hidden" name="sessionId" value={activeSession.id} />
+              <textarea 
+                name="remarks" 
+                defaultValue={activeSession.remarks || ''}
+                placeholder="Add any notes about your shift..."
+                className="w-full p-2 border rounded-lg bg-background text-sm h-20 resize-none"
+              />
+              <button type="submit" className="w-full py-2 bg-secondary text-secondary-foreground font-medium rounded-lg">
+                Save Remarks
               </button>
             </form>
           </div>
