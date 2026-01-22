@@ -45,7 +45,7 @@ export default async function CSRDashboardPage() {
     .select('break_type')
     .eq('is_enabled', true)
     .order('break_type')
-  // Get stats for today - explicitly pass null to use today's date range
+  // Get stats for today - try RPC first, fallback to direct queries
   const { data: stats, error: statsError } = await supabase.rpc('get_user_stats', { 
     p_user_id: user?.id,
     p_start_date: null,
@@ -58,8 +58,57 @@ export default async function CSRDashboardPage() {
     total_sessions: number
   } | null, error: any }
   
-  if (statsError) {
-    console.error('Error fetching stats:', statsError)
+  // Fallback: Direct queries if RPC fails or always use direct for more reliable results
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStart = today.toISOString()
+  const todayEnd = new Date().toISOString()
+
+  // Get today's calls
+  const { count: callsCount } = await supabase
+    .from('call_entries')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user?.id)
+    .gte('occurred_at', todayStart)
+    .lte('occurred_at', todayEnd)
+
+  // Get today's deposits
+  const { data: depositsData, count: depositsCount } = await supabase
+    .from('deposit_entries')
+    .select('amount')
+    .eq('user_id', user?.id)
+    .gte('occurred_at', todayStart)
+    .lte('occurred_at', todayEnd)
+
+  // Get today's breaks (from all sessions today)
+  const { data: todaySessions } = await supabase
+    .from('work_sessions')
+    .select('id')
+    .eq('user_id', user?.id)
+    .gte('clock_in_at', todayStart)
+    .lte('clock_in_at', todayEnd)
+
+  const sessionIds = todaySessions?.map(s => s.id) || []
+  const { data: breaksData } = sessionIds.length > 0 ? await supabase
+    .from('break_entries')
+    .select('start_at, end_at')
+    .in('session_id', sessionIds) : { data: null }
+
+  const breakMinutes = breaksData?.reduce((total, b) => {
+    const end = b.end_at ? new Date(b.end_at) : new Date()
+    const start = new Date(b.start_at)
+    return total + (end.getTime() - start.getTime()) / (1000 * 60)
+  }, 0) || 0
+
+  const breakCount = breaksData?.length || 0
+
+  // Use direct stats (more reliable than RPC)
+  const displayStats = {
+    total_calls: callsCount || 0,
+    total_deposits_count: depositsCount || 0,
+    total_deposits_amount: depositsData?.reduce((sum, d) => sum + (parseFloat(d.amount?.toString() || '0') || 0), 0) || 0,
+    total_break_minutes: breakMinutes,
+    total_sessions: todaySessions?.length || 0
   }
 
   const { data: callStatuses } = await supabase.from('call_status_options').select('*').eq('is_enabled', true).order('sort_order')
@@ -190,18 +239,25 @@ export default async function CSRDashboardPage() {
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Step 3: Log Activities (Optional)</p>
           
           {/* Today's Summary - Quick Stats */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-center">
-              <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Calls</p>
-              <p className="text-xl font-black text-blue-600">{stats?.total_calls || 0}</p>
-            </div>
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
-              <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Deposits</p>
-              <p className="text-xl font-black text-emerald-600">{stats?.total_deposits_count || 0}</p>
-            </div>
-            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
-              <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Break Mins</p>
-              <p className="text-xl font-black text-amber-600">{Math.round(stats?.total_break_minutes || 0)}</p>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Today's Activity</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-center">
+                <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Calls</p>
+                <p className="text-2xl font-black text-blue-600">{displayStats.total_calls}</p>
+              </div>
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Deposits</p>
+                <p className="text-2xl font-black text-emerald-600">{displayStats.total_deposits_count}</p>
+              </div>
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
+                <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Breaks</p>
+                <p className="text-2xl font-black text-amber-600">{breakCount}</p>
+              </div>
+              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl text-center">
+                <p className="text-[10px] font-bold text-purple-600 uppercase mb-1">Break Time</p>
+                <p className="text-2xl font-black text-purple-600">{Math.round(displayStats.total_break_minutes)}m</p>
+              </div>
             </div>
           </div>
 
