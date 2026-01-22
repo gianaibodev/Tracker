@@ -3,7 +3,7 @@
 import { Coffee } from 'lucide-react'
 import { startBreak } from '@/app/(dashboard)/app/actions'
 
-export function BreakButton({ breakType, sessionId, remainingMinutes }: { breakType: string, sessionId: string, remainingMinutes: number }) {
+export function BreakButton({ breakType, sessionId }: { breakType: string, sessionId: string }) {
   return (
     <form action={startBreak.bind(null, sessionId, breakType)}>
       <button
@@ -12,9 +12,6 @@ export function BreakButton({ breakType, sessionId, remainingMinutes }: { breakT
       >
         <Coffee size={20} />
         {breakType} Break
-        {remainingMinutes > 0 && (
-          <span className="text-xs opacity-75">({Math.round(remainingMinutes)}m left)</span>
-        )}
       </button>
     </form>
   )

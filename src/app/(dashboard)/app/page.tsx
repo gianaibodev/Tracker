@@ -39,16 +39,12 @@ export default async function CSRDashboardPage() {
 
   const activeBreak = activeSession?.break_entries?.find((b: any) => !b.end_at)
 
-  // RPC for remaining allowances
-  const { data: allowances } = await supabase.rpc('get_remaining_allowances', { p_user_id: user?.id }) as { data: Array<{
-    break_type: string,
-    max_count: number,
-    max_minutes: number,
-    used_count: number,
-    used_minutes: number,
-    remaining_count: number,
-    remaining_minutes: number
-  }> | null }
+  // Get available break types (no time limits - all breaks are always available)
+  const { data: breakTypes } = await supabase
+    .from('break_allowances')
+    .select('break_type')
+    .eq('is_enabled', true)
+    .order('break_type')
   // Get stats for today - explicitly pass null to use today's date range
   const { data: stats, error: statsError } = await supabase.rpc('get_user_stats', { 
     p_user_id: user?.id,
@@ -169,15 +165,14 @@ export default async function CSRDashboardPage() {
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">Click a break type to start:</p>
                   <div className="grid grid-cols-1 gap-3">
-                    {allowances?.map(a => (
+                    {breakTypes?.map(bt => (
                       <BreakButton 
-                        key={a.break_type} 
-                        breakType={a.break_type} 
+                        key={bt.break_type} 
+                        breakType={bt.break_type} 
                         sessionId={activeSession.id}
-                        remainingMinutes={a.remaining_minutes}
                       />
                     ))}
-                    {(!allowances || allowances.length === 0) && (
+                    {(!breakTypes || breakTypes.length === 0) && (
                       <p className="text-sm text-muted-foreground text-center py-4">No breaks configured</p>
                     )}
                   </div>
@@ -188,20 +183,6 @@ export default async function CSRDashboardPage() {
         )}
       </div>
 
-      {/* Break Allowances - Quick Reference */}
-      {activeSession && (
-        <div className="p-4 bg-muted/30 border rounded-xl">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">Break Time Remaining</p>
-          <div className="flex gap-4 text-sm flex-wrap">
-            {allowances?.map(a => (
-              <div key={a.break_type} className="flex items-center gap-2">
-                <span className="font-bold capitalize">{a.break_type}:</span>
-                <span className="text-muted-foreground">{Math.max(0, Math.round(a.remaining_minutes))} minutes</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* STEP 3: Activity Logging - Moved to Bottom */}
       {activeSession && !activeBreak && (
