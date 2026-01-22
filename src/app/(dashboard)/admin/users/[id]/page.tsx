@@ -19,7 +19,13 @@ export default async function AdminUserDrilldownPage({
 
   if (!profile) notFound()
 
-  const { data: stats } = await supabase.rpc('get_user_stats', { p_user_id: id }).single()
+  const { data: stats } = await supabase.rpc('get_user_stats', { p_user_id: id }).single() as { data: {
+    total_calls: number,
+    total_deposits_count: number,
+    total_deposits_amount: number,
+    total_break_minutes: number,
+    total_sessions: number
+  } | null }
   
   const { data: recentSessions } = await supabase
     .from('work_sessions')
@@ -36,7 +42,13 @@ export default async function AdminUserDrilldownPage({
   // Fetch summaries for these sessions
   const sessionSummaries = recentSessions ? await Promise.all(
     recentSessions.map(async (s) => {
-      const { data } = await supabase.rpc('get_session_summary', { p_session_id: s.id }).single()
+      const { data } = await supabase.rpc('get_session_summary', { p_session_id: s.id }).single() as { data: {
+        total_duration_minutes: number,
+        total_break_minutes: number,
+        clean_work_minutes: number,
+        break_counts: Record<string, number>,
+        username: string
+      } | null }
       return { id: s.id, ...data }
     })
   ) : []

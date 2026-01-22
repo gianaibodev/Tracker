@@ -5,7 +5,13 @@ import Link from 'next/link'
 export default async function AdminOverviewPage() {
   const supabase = await createClient()
 
-  const { data: kpis } = await supabase.rpc('get_admin_kpis').single()
+  const { data: kpis } = await supabase.rpc('get_admin_kpis').single() as { data: { 
+    total_calls: number, 
+    total_deposits_count: number, 
+    total_deposits_amount: number, 
+    active_sessions: number, 
+    on_break_count: number 
+  } | null }
   
   const { data: activeSessions } = await supabase
     .from('work_sessions')

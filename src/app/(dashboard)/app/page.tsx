@@ -24,13 +24,33 @@ export default async function CSRDashboardPage() {
 
   const { data: sessionSummary } = lastClosedSession ? await supabase
     .rpc('get_session_summary', { p_session_id: lastClosedSession.id })
-    .single() : { data: null }
+    .single() as { data: {
+      total_duration_minutes: number,
+      total_break_minutes: number,
+      clean_work_minutes: number,
+      break_counts: Record<string, number>,
+      username: string
+    } | null } : { data: null }
 
   const activeBreak = activeSession?.break_entries?.find(b => !b.end_at)
 
   // RPC for remaining allowances
-  const { data: allowances } = await supabase.rpc('get_remaining_allowances', { p_user_id: user?.id })
-  const { data: stats } = await supabase.rpc('get_user_stats', { p_user_id: user?.id }).single()
+  const { data: allowances } = await supabase.rpc('get_remaining_allowances', { p_user_id: user?.id }) as { data: Array<{
+    break_type: string,
+    max_count: number,
+    max_minutes: number,
+    used_count: number,
+    used_minutes: number,
+    remaining_count: number,
+    remaining_minutes: number
+  }> | null }
+  const { data: stats } = await supabase.rpc('get_user_stats', { p_user_id: user?.id }).single() as { data: {
+    total_calls: number,
+    total_deposits_count: number,
+    total_deposits_amount: number,
+    total_break_minutes: number,
+    total_sessions: number
+  } | null }
 
   const { data: callStatuses } = await supabase.from('call_status_options').select('*').eq('is_enabled', true).order('sort_order')
   const { data: callOutcomes } = await supabase.from('call_outcome_options').select('*').eq('is_enabled', true).order('sort_order')
