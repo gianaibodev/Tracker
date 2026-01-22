@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { clockIn, clockOut, endBreak, logCall, logDeposit, updateRemarks } from './actions'
-import { startBreakWithNotes } from './break-actions'
+import { clockIn, clockOut, endBreak, logCall, logDeposit, updateRemarks, updateBreakNotes } from './actions'
 import { Clock, Coffee, Phone, DollarSign, PenLine } from 'lucide-react'
 import { FormattedTime } from '@/components/ui/date-formatter'
 import { BreakButton } from '@/components/break-button'
@@ -121,37 +120,56 @@ export default async function CSRDashboardPage() {
             <div>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-3">Step 2: Take a Break</p>
               {activeBreak ? (
-                <div className="p-5 bg-amber-500/10 border-2 border-amber-500/30 rounded-xl space-y-3">
+                <div className="p-5 bg-amber-500/10 border-2 border-amber-500/30 rounded-xl space-y-4">
                   <div className="flex items-center gap-3">
                     <Coffee className="text-amber-500" size={28} />
                     <div className="flex-1">
                       <p className="text-base font-bold text-amber-600 uppercase">On {activeBreak.break_type} Break</p>
                       <p className="text-xs text-muted-foreground">Started at <FormattedTime date={activeBreak.start_at} options={{ hour: '2-digit', minute: '2-digit', hour12: true }} /></p>
-                      {activeBreak.notes && (
-                        <p className="text-xs text-muted-foreground mt-1 italic">"{activeBreak.notes}"</p>
-                      )}
                     </div>
                   </div>
-                  <form action={endBreak.bind(null, activeBreak.id)}>
-                    <SubmitButton className="w-full py-3 bg-amber-500 text-white rounded-xl text-base font-bold shadow-md hover:bg-amber-600 transition-colors" loadingText="Ending Break...">
-                      End Break
-                    </SubmitButton>
-                  </form>
+                  
+                  {/* Break Remarks Form */}
+                  <div className="space-y-3">
+                    <form action={updateBreakNotes} className="space-y-3">
+                      <input type="hidden" name="breakId" value={activeBreak.id} />
+                      <div>
+                        <label className="text-sm font-medium block mb-2">Why are you taking this break?</label>
+                        <textarea
+                          name="notes"
+                          defaultValue={activeBreak.notes || ''}
+                          placeholder="Enter your reason for taking this break..."
+                          className="w-full p-3 border rounded-lg bg-background text-sm h-24 resize-none"
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <SubmitButton className="flex-1 py-2 px-4 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-colors" loadingText="Saving...">
+                          Save Reason
+                        </SubmitButton>
+                      </div>
+                    </form>
+                    <form action={endBreak.bind(null, activeBreak.id)}>
+                      <SubmitButton className="w-full py-2 px-4 bg-destructive text-white font-bold rounded-lg hover:bg-destructive/90 transition-colors" loadingText="Ending...">
+                        End Break
+                      </SubmitButton>
+                    </form>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">Select a break type and add remarks:</p>
+                  <p className="text-sm text-muted-foreground">Click a break type to start:</p>
                   <div className="grid grid-cols-1 gap-3">
-                    {allowances?.filter(a => a.remaining_count > 0).map(a => (
+                    {allowances?.map(a => (
                       <BreakButton 
                         key={a.break_type} 
                         breakType={a.break_type} 
                         sessionId={activeSession.id}
-                        remainingCount={a.remaining_count}
+                        remainingMinutes={a.remaining_minutes}
                       />
                     ))}
-                    {(!allowances || allowances.filter(a => a.remaining_count > 0).length === 0) && (
-                      <p className="text-sm text-muted-foreground text-center py-4">No breaks available</p>
+                    {(!allowances || allowances.length === 0) && (
+                      <p className="text-sm text-muted-foreground text-center py-4">No breaks configured</p>
                     )}
                   </div>
                 </div>
@@ -164,12 +182,12 @@ export default async function CSRDashboardPage() {
       {/* Break Allowances - Quick Reference */}
       {activeSession && (
         <div className="p-4 bg-muted/30 border rounded-xl">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">Break Allowances</p>
-          <div className="flex gap-4 text-sm">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">Break Time Remaining</p>
+          <div className="flex gap-4 text-sm flex-wrap">
             {allowances?.map(a => (
               <div key={a.break_type} className="flex items-center gap-2">
                 <span className="font-bold capitalize">{a.break_type}:</span>
-                <span className="text-muted-foreground">{a.remaining_count} left</span>
+                <span className="text-muted-foreground">{Math.max(0, Math.round(a.remaining_minutes))} minutes</span>
               </div>
             ))}
           </div>

@@ -27,6 +27,37 @@ export async function clockOut(sessionId: string) {
   revalidatePath('/app')
 }
 
+export async function startBreak(sessionId: string, breakType: string) {
+  'use server'
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase.from('break_entries').insert({
+    session_id: sessionId,
+    break_type: breakType,
+    start_at: new Date().toISOString()
+  })
+
+  revalidatePath('/app')
+}
+
+export async function updateBreakNotes(formData: FormData) {
+  'use server'
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const breakId = formData.get('breakId') as string
+  const notes = formData.get('notes') as string
+
+  await supabase.from('break_entries').update({
+    notes: notes || null
+  }).eq('id', breakId)
+
+  revalidatePath('/app')
+}
+
 export async function endBreak(breakId: string) {
   const supabase = await createClient()
   await supabase.from('break_entries').update({
