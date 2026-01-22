@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 export async function clockIn() {
   const supabase = await createClient()
@@ -68,6 +69,7 @@ export async function endBreak(breakId: string) {
 }
 
 export async function logCall(formData: FormData) {
+  'use server'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
@@ -77,7 +79,7 @@ export async function logCall(formData: FormData) {
   const outcome = formData.get('outcome') as string
   const notes = formData.get('notes') as string
 
-  await supabase.from('call_entries').insert({
+  const { error } = await supabase.from('call_entries').insert({
     user_id: user.id,
     session_id: sessionId,
     call_status: status,
@@ -86,10 +88,17 @@ export async function logCall(formData: FormData) {
     occurred_at: new Date().toISOString()
   })
 
+  if (error) {
+    console.error('Error logging call:', error)
+    return
+  }
+
   revalidatePath('/app')
+  redirect('/app')
 }
 
 export async function logDeposit(formData: FormData) {
+  'use server'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
@@ -99,7 +108,7 @@ export async function logDeposit(formData: FormData) {
   const reference = formData.get('reference') as string
   const notes = formData.get('notes') as string
 
-  await supabase.from('deposit_entries').insert({
+  const { error } = await supabase.from('deposit_entries').insert({
     user_id: user.id,
     session_id: sessionId,
     amount,
@@ -108,7 +117,13 @@ export async function logDeposit(formData: FormData) {
     occurred_at: new Date().toISOString()
   })
 
+  if (error) {
+    console.error('Error logging deposit:', error)
+    return
+  }
+
   revalidatePath('/app')
+  redirect('/app')
 }
 
 export async function updateRemarks(formData: FormData) {

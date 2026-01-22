@@ -49,13 +49,22 @@ export default async function CSRDashboardPage() {
     remaining_count: number,
     remaining_minutes: number
   }> | null }
-  const { data: stats } = await supabase.rpc('get_user_stats', { p_user_id: user?.id }).single() as { data: {
+  // Get stats for today - explicitly pass null to use today's date range
+  const { data: stats, error: statsError } = await supabase.rpc('get_user_stats', { 
+    p_user_id: user?.id,
+    p_start_date: null,
+    p_end_date: null
+  }).single() as { data: {
     total_calls: number,
     total_deposits_count: number,
     total_deposits_amount: number,
     total_break_minutes: number,
     total_sessions: number
-  } | null }
+  } | null, error: any }
+  
+  if (statsError) {
+    console.error('Error fetching stats:', statsError)
+  }
 
   const { data: callStatuses } = await supabase.from('call_status_options').select('*').eq('is_enabled', true).order('sort_order')
   const { data: callOutcomes } = await supabase.from('call_outcome_options').select('*').eq('is_enabled', true).order('sort_order')
