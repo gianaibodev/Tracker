@@ -23,7 +23,8 @@ export default async function CSRLayout({
     .eq('id', user.id)
     .single()
 
-  if (profile?.role === 'admin') {
+  // Only redirect if profile exists and user is admin
+  if (profile && profile.role === 'admin') {
     redirect('/admin')
   }
 

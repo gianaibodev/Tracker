@@ -16,12 +16,14 @@ export default async function AdminLayout({
     redirect('/login')
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
+    .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
+  // If profile doesn't exist, has an error, or user is not admin, redirect to app
+  if (profileError || !profile || profile.role !== 'admin') {
     redirect('/app')
   }
 
